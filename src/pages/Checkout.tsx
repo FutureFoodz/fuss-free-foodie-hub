@@ -13,7 +13,7 @@ import { t } from "@/lib/i18n";
 import { Minus, Plus, Trash2 } from "lucide-react";
 
 const Checkout = () => {
-  const { items, removeItem, updateItemQuantity, clearCart, totalAmount } = useCart();
+  const { items, removeItem, updateQuantity, clearCart, total } = useCart();
   const { language } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -29,12 +29,15 @@ const Checkout = () => {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Calculate totalAmount as a number from the total string
+  const totalAmount = parseFloat(total.replace(/[^\d.-]/g, ''));
 
-  const handleQuantityChange = (id: number, change: number) => {
+  const handleQuantityChange = (id: string | number, change: number) => {
     const item = items.find(item => item.id === id);
     if (item) {
       const newQuantity = Math.max(1, item.quantity + change);
-      updateItemQuantity(id, newQuantity);
+      updateQuantity(id, newQuantity);
     }
   };
   
