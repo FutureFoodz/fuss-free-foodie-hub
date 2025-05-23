@@ -15,6 +15,7 @@ import RecipeDetail from "./pages/RecipeDetail";
 import RecipeEditor from "./pages/RecipeEditor";
 import Marketplace from "./pages/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
+import Checkout from "./pages/Checkout";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/recipes/:id/edit" element={<RecipeEditor />} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/marketplace/:id" element={<ProductDetail />} />
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/about" element={<About />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

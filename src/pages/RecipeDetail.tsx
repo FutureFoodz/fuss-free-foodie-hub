@@ -4,6 +4,10 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import RecipeSocialShare from "@/components/RecipeSocialShare";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "@/components/ThemeProvider";
@@ -12,6 +16,28 @@ import { t } from "@/lib/i18n";
 const RecipeDetail = () => {
   const { id } = useParams();
   const { language } = useTheme();
+  const [comment, setComment] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [comments, setComments] = useState([
+    {
+      id: 1,
+      name: "Jamie Wilson",
+      date: "May 15, 2025",
+      content: "This recipe is amazing! I tried it last night and it was a hit with the whole family. Will definitely make it again.",
+      avatar: "W"
+    },
+    {
+      id: 2,
+      name: "Alex Chen",
+      date: "May 14, 2025",
+      content: "I've been looking for a good tempeh recipe for ages. This one is perfect - not too complicated and super flavorful.",
+      avatar: "C"
+    }
+  ]);
+
+  // Parse ingredients to create checklist
+  const [checkedIngredients, setCheckedIngredients] = useState<string[]>([]);
 
   // Mock recipe data with markdown content
   const recipe = {
@@ -74,8 +100,45 @@ This recipe is incredibly versatile:
     `
   };
 
+  // Extract ingredients from markdown for checklist
+  const extractIngredients = (markdown: string): string[] => {
+    if (!markdown) return [];
+    const lines = markdown.split('\n');
+    return lines
+      .filter(line => line.trim().startsWith('-'))
+      .map(line => line.trim().substring(1).trim());
+  };
+  
+  const ingredientList = extractIngredients(recipe.ingredients);
+
+  const toggleIngredient = (ingredient: string) => {
+    setCheckedIngredients(prev =>
+      prev.includes(ingredient)
+        ? prev.filter(item => item !== ingredient)
+        : [...prev, ingredient]
+    );
+  };
+
   // URL for social sharing
   const shareUrl = window.location.href;
+
+  const handleSubmitComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!comment.trim() || !name.trim() || !email.trim()) return;
+    
+    const newComment = {
+      id: comments.length + 1,
+      name: name,
+      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      content: comment,
+      avatar: name.charAt(0).toUpperCase()
+    };
+    
+    setComments([newComment, ...comments]);
+    setComment("");
+    setName("");
+    setEmail("");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -132,7 +195,28 @@ This recipe is incredibly versatile:
                   
                   <TabsContent value="ingredients" className="mt-4">
                     <div className="prose prose-lg dark:prose-invert max-w-none">
-                      <div dangerouslySetInnerHTML={{ __html: markdownToHtml(recipe.ingredients) }} />
+                      {/* Ingredients as checklist */}
+                      <h1 className="text-2xl font-bold mt-4 mb-2">Ingredients</h1>
+                      <div className="space-y-2">
+                        {ingredientList.map((ingredient, idx) => (
+                          <div key={idx} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`ingredient-${idx}`} 
+                              checked={checkedIngredients.includes(ingredient)}
+                              onCheckedChange={() => toggleIngredient(ingredient)}
+                            />
+                            <label 
+                              htmlFor={`ingredient-${idx}`}
+                              className={`text-lg ${checkedIngredients.includes(ingredient) ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}
+                            >
+                              {ingredient}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                        Check items as you gather them
+                      </div>
                     </div>
                   </TabsContent>
                   
@@ -156,6 +240,75 @@ This recipe is incredibly versatile:
                       #{tag}
                     </Badge>
                   ))}
+                </div>
+
+                {/* Share buttons */}
+                <div className="mt-8 pt-6 border-t dark:border-gray-700">
+                  <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{t("action.share", language)}</h3>
+                  <RecipeSocialShare
+                    title={recipe.title} 
+                    description={recipe.description}
+                    url={shareUrl}
+                  />
+                </div>
+                
+                {/* Comments section */}
+                <div className="mt-8 pt-6 border-t dark:border-gray-700">
+                  <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">{t("blog.comments", language)} ({comments.length})</h3>
+                  
+                  {/* Comment form */}
+                  <Card className="mb-8 border-0 shadow-sm dark:bg-gray-700">
+                    <CardContent className="p-6">
+                      <h4 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">{t("blog.writeComment", language)}</h4>
+                      <form onSubmit={handleSubmitComment} className="space-y-4">
+                        <Textarea
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          placeholder="Your comment"
+                          className="resize-none dark:bg-gray-800 dark:border-gray-600"
+                          required
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <Input
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Name"
+                            className="dark:bg-gray-800 dark:border-gray-600"
+                            required
+                          />
+                          <Input
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Email"
+                            type="email"
+                            className="dark:bg-gray-800 dark:border-gray-600"
+                            required
+                          />
+                        </div>
+                        <Button type="submit" className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600">
+                          {t("action.submit", language)}
+                        </Button>
+                      </form>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Comments list */}
+                  <div className="space-y-6">
+                    {comments.map((comment) => (
+                      <div key={comment.id} className="flex space-x-4 p-4 rounded-lg bg-white dark:bg-gray-700 shadow-sm">
+                        <Avatar>
+                          <AvatarFallback>{comment.avatar}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold dark:text-white">{comment.name}</h4>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">{comment.date}</span>
+                          </div>
+                          <p className="mt-1 text-gray-700 dark:text-gray-300">{comment.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>

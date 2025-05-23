@@ -79,6 +79,26 @@ const Marketplace = () => {
       image: "photo-1721322800607-8c38375eef04",
       inStock: true,
       details: "Aged 6 months, made with organic soybeans and koji starter"
+    },
+    {
+      id: 7,
+      name: "Coconut Yogurt",
+      description: "Creamy dairy-free yogurt with live cultures",
+      price: "$7.99",
+      category: "Dairy Alternatives",
+      image: "photo-1558680069-f4a46f5aa8e8",
+      inStock: true,
+      details: "Made from organic coconuts, rich in probiotics with a tangy flavor"
+    },
+    {
+      id: 8,
+      name: "Fermentation Starter Kit",
+      description: "Everything you need to start fermenting at home",
+      price: "$34.99",
+      category: "Fermented",
+      image: "photo-1605478185737-99924509aeb4",
+      inStock: true,
+      details: "Includes fermentation vessels, airlocks, and starter cultures"
     }
   ];
 
@@ -133,7 +153,7 @@ const Marketplace = () => {
                   variant={selectedCategory === category ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCategory(category)}
-                  className={selectedCategory === category ? "bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600" : ""}
+                  className={selectedCategory === category ? "bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600" : "dark:border-gray-600 dark:text-gray-300"}
                 >
                   {category}
                 </Button>
@@ -157,33 +177,34 @@ const Marketplace = () => {
       {/* Products */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-0 dark:bg-gray-800">
+              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-0 dark:bg-gray-800 h-full">
                 <Link to={`/marketplace/${product.id}`} className="block">
-                  <div className="aspect-video overflow-hidden">
+                  <div className="aspect-square overflow-hidden">
                     <img
-                      src={`https://images.unsplash.com/${product.image}?w=400&h=300&fit=crop`}
+                      src={`https://images.unsplash.com/${product.image}?w=300&h=300&fit=crop`}
                       alt={product.name}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                 </Link>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
+                <CardContent className="p-4 flex flex-col h-[calc(100%-50%)]">
+                  <div className="space-y-2 flex-1">
                     <div className="flex items-center justify-between">
-                      <Badge variant="secondary">{product.category}</Badge>
-                      <span className="text-lg font-bold text-green-600 dark:text-green-400">{product.price}</span>
+                      <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                      <span className="text-sm font-bold text-green-600 dark:text-green-400">{product.price}</span>
                     </div>
                     <Link to={`/marketplace/${product.id}`}>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400">
                         {product.name}
                       </h3>
                     </Link>
-                    <p className="text-gray-600 dark:text-gray-300">{product.description}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{product.details}</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{product.description}</p>
+                  </div>
+                  <div className="pt-2 mt-2 border-t dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm ${product.inStock 
+                      <span className={`text-xs ${product.inStock 
                         ? 'text-green-600 dark:text-green-400' 
                         : 'text-red-500'}`}
                       >
@@ -191,20 +212,13 @@ const Marketplace = () => {
                           ? t("product.inStock", language) || "In Stock" 
                           : t("product.outOfStock", language) || "Out of Stock"}
                       </span>
-                      <div className="flex gap-2">
-                        <Link to={`/marketplace/${product.id}`}>
-                          <Button variant="outline" className="dark:border-gray-600 dark:text-gray-300">
-                            {t("product.details", language) || "Details"}
-                          </Button>
-                        </Link>
-                        <Button 
-                          className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600"
-                          disabled={!product.inStock}
-                          onClick={() => handleAddToCart(product)}
-                        >
-                          {t("action.addToCart", language) || "Add to Cart"}
-                        </Button>
-                      </div>
+                      <Button 
+                        className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-xs h-8"
+                        disabled={!product.inStock}
+                        onClick={() => handleAddToCart(product)}
+                      >
+                        {t("action.addToCart", language) || "Add to Cart"}
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
