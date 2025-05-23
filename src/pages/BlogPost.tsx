@@ -1,23 +1,48 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"; // Removed AvatarImage as it's not used
 import { Facebook, Twitter, Instagram, Share2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { t } from "@/lib/i18n";
+import { markdownToHtml } from "@/lib/utils"; // Import markdownToHtml
+
+interface BlogPost {
+  id: number; // Changed from string to number to match JSON
+  title: string;
+  category: string;
+  readTime: string;
+  author: string;
+  date: string;
+  content: string; // This is Markdown
+  image: string;
+  tags: string[];
+}
+
+interface Comment {
+  id: number;
+  name: string;
+  date: string;
+  content: string;
+  avatar: string;
+}
 
 const BlogPost = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { language } = useTheme();
-  const [comment, setComment] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [comments, setComments] = useState([
+  const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [commentText, setCommentText] = useState(""); // Renamed from comment to avoid conflict
+  const [commentName, setCommentName] = useState(""); // Renamed from name
+  const [commentEmail, setCommentEmail] = useState(""); // Renamed from email
+  const [comments, setComments] = useState<Comment[]>([
+    // Initial mock comments, can be cleared or managed separately in a real app
     {
       id: 1,
       name: "Jamie Wilson",
@@ -34,60 +59,68 @@ const BlogPost = () => {
     }
   ]);
 
-  // Mock data for a blog post
-  const blogPost = {
-    id: id,
-    title: "5-Minute Tempeh Stir Fry",
-    category: "Recipes",
-    readTime: "3 min read",
-    author: "Sofia Lindgren",
-    date: "March 15, 2024",
-    content: `
-      <p>Quick and delicious plant-based protein that doesn't compromise on flavor. Perfect for busy weeknights.</p>
-      
-      <h2>Why Tempeh?</h2>
-      <p>Tempeh is not just delicious; it's packed with nutrition. This fermented soybean product provides complete protein, essential amino acids, and beneficial probiotics that support gut health. Unlike many processed meat substitutes, tempeh is minimally processed and free from artificial additives.</p>
-      
-      <p>Its firm texture makes it excellent for stir-fries, while its nutty flavor complements a wide range of seasonings. Whether you're a seasoned vegan chef or just exploring plant-based options, tempeh deserves a place in your kitchen rotation.</p>
-      
-      <h2>Key Ingredients</h2>
-      <p>The beauty of this stir-fry is its simplicity. You'll need:</p>
-      <ul>
-        <li>200g tempeh, cubed</li>
-        <li>2 tbsp soy sauce or tamari</li>
-        <li>1 tbsp maple syrup</li>
-        <li>1 clove garlic, minced</li>
-        <li>Fresh vegetables of your choice (bell peppers, broccoli, snap peas work well)</li>
-        <li>1 tbsp cooking oil</li>
-        <li>Optional: sriracha, sesame seeds, green onions for garnish</li>
-      </ul>
-      
-      <h2>The #NoFuss Approach</h2>
-      <p>What makes this recipe truly special is its alignment with our #NoFuss philosophy. No complicated techniques, no hard-to-find ingredients, and minimal cleanup. Just honest, wholesome food that nourishes both body and planet.</p>
-      
-      <p>Try it tonight and tag us in your creations with #NoFuss and #FutureFoodz!</p>
-    `,
-    image: "photo-1618160702438-9b02ab6515c9",
-    tags: ["tempeh", "quick-meals", "protein", "plant-based", "vegan"]
-  };
+  useEffect(() => {
+    const fetchBlogPost = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/data/blogPosts.json");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const posts: BlogPost[] = await response.json();
+        const postId = parseInt(id as string);
+        const foundPost = posts.find(p => p.id === postId);
+
+        if (foundPost) {
+          setBlogPost(foundPost);
+        } else {
+          setError("Blog post not found.");
+        }
+      } catch (e) {
+        if (e instanceof Error) {
+          setError(`Failed to load blog post: ${e.message}`);
+        } else {
+          setError("Failed to load blog post: An unknown error occurred");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchBlogPost();
+    }
+  }, [id]);
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim() || !name.trim() || !email.trim()) return;
+    if (!commentText.trim() || !commentName.trim() || !commentEmail.trim()) return;
     
-    const newComment = {
+    const newComment: Comment = {
       id: comments.length + 1,
-      name: name,
+      name: commentName,
       date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      content: comment,
-      avatar: name.charAt(0).toUpperCase()
+      content: commentText,
+      avatar: commentName.charAt(0).toUpperCase()
     };
     
     setComments([newComment, ...comments]);
-    setComment("");
-    setName("");
-    setEmail("");
+    setCommentText("");
+    setCommentName("");
+    setCommentEmail("");
   };
+
+  if (loading) {
+    return <div className="container mx-auto px-4 py-12 text-center">Loading post...</div>;
+  }
+
+  if (error) {
+    return <div className="container mx-auto px-4 py-12 text-center text-red-500">{error}</div>;
+  }
+
+  if (!blogPost) {
+    return <div className="container mx-auto px-4 py-12 text-center">Blog post not found.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -117,25 +150,34 @@ const BlogPost = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2">
-            <Card className="overflow-hidden border-0 shadow-md">
+            <Card className="overflow-hidden border-0 shadow-md dark:bg-gray-800">
               <CardContent className="p-8">
                 <div 
                   className="prose prose-lg dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: blogPost.content }}
+                  dangerouslySetInnerHTML={{ __html: markdownToHtml(blogPost.content) }}
                 />
+
+                {/* Edit Post Button - Placed after content, before tags */}
+                {blogPost && (
+                  <div className="mt-8 flex justify-end">
+                    <Link to={`/blog/${blogPost.id}/edit`}>
+                      <Button variant="outline" className="dark:border-gray-600 dark:text-gray-300">
+                        {t("blog.editPost", language) || "Edit Post"}
+                      </Button>
+                    </Link>
+                  </div>
+                )}
                 
-                {/* Tags */}
-                <div className="mt-8 pt-6 border-t flex flex-wrap gap-2">
+                <div className="mt-8 pt-6 border-t dark:border-gray-700 flex flex-wrap gap-2">
                   {blogPost.tags.map((tag, index) => (
-                    <Badge key={index} variant="outline" className="text-sm">
+                    <Badge key={index} variant="outline" className="text-sm dark:border-gray-600">
                       #{tag}
                     </Badge>
                   ))}
                 </div>
                 
-                {/* Share buttons */}
-                <div className="mt-8 pt-6 border-t">
-                  <h3 className="text-xl font-semibold mb-4">{t("action.share", language)}</h3>
+                <div className="mt-8 pt-6 border-t dark:border-gray-700">
+                  <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{t("action.share", language)}</h3>
                   <div className="flex space-x-2">
                     <Button variant="outline" size="icon" className="rounded-full">
                       <Facebook className="h-5 w-5" />
@@ -152,34 +194,34 @@ const BlogPost = () => {
                   </div>
                 </div>
                 
-                {/* Comments section */}
-                <div className="mt-8 pt-6 border-t">
-                  <h3 className="text-xl font-semibold mb-6">{t("blog.comments", language)} ({comments.length})</h3>
+                <div className="mt-8 pt-6 border-t dark:border-gray-700">
+                  <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">{t("blog.comments", language)} ({comments.length})</h3>
                   
-                  {/* Comment form */}
-                  <Card className="mb-8 border-0 shadow-sm">
+                  <Card className="mb-8 border-0 shadow-sm dark:bg-gray-700">
                     <CardContent className="p-6">
-                      <h4 className="text-lg font-medium mb-4">{t("blog.writeComment", language)}</h4>
+                      <h4 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">{t("blog.writeComment", language)}</h4>
                       <form onSubmit={handleSubmitComment} className="space-y-4">
                         <Textarea
-                          value={comment}
-                          onChange={(e) => setComment(e.target.value)}
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
                           placeholder="Your comment"
-                          className="resize-none"
+                          className="resize-none dark:bg-gray-800 dark:border-gray-600"
                           required
                         />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <Input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={commentName}
+                            onChange={(e) => setCommentName(e.target.value)}
                             placeholder="Name"
+                            className="dark:bg-gray-800 dark:border-gray-600"
                             required
                           />
                           <Input
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={commentEmail}
+                            onChange={(e) => setCommentEmail(e.target.value)}
                             placeholder="Email"
                             type="email"
+                            className="dark:bg-gray-800 dark:border-gray-600"
                             required
                           />
                         </div>
@@ -190,16 +232,15 @@ const BlogPost = () => {
                     </CardContent>
                   </Card>
                   
-                  {/* Comments list */}
                   <div className="space-y-6">
                     {comments.map((comment) => (
-                      <div key={comment.id} className="flex space-x-4 p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+                      <div key={comment.id} className="flex space-x-4 p-4 rounded-lg bg-white dark:bg-gray-700 shadow-sm">
                         <Avatar>
                           <AvatarFallback>{comment.avatar}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-semibold">{comment.name}</h4>
+                            <h4 className="font-semibold dark:text-white">{comment.name}</h4>
                             <span className="text-sm text-gray-500 dark:text-gray-400">{comment.date}</span>
                           </div>
                           <p className="mt-1 text-gray-700 dark:text-gray-300">{comment.content}</p>
@@ -215,10 +256,12 @@ const BlogPost = () => {
           {/* Sidebar */}
           <div>
             <div className="sticky top-20 space-y-6">
-              <Card className="border-0 shadow-md">
+              {/* Related Posts Card - Placeholder, ideally fetch related posts */}
+              <Card className="border-0 shadow-md dark:bg-gray-800">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Related Posts</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Related Posts</h3>
                   <div className="space-y-4">
+                    {/* Example related post links - replace with dynamic data if available */}
                     <Link to="/blog/2" className="flex items-start space-x-3 group">
                       <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
                         <img 
@@ -228,45 +271,20 @@ const BlogPost = () => {
                         />
                       </div>
                       <div>
-                        <h4 className="font-medium group-hover:text-green-600 transition-colors">DIY Kombucha at Home</h4>
+                        <h4 className="font-medium group-hover:text-green-600 transition-colors dark:text-white">DIY Kombucha at Home</h4>
                         <p className="text-sm text-gray-500 dark:text-gray-400">8 min read</p>
-                      </div>
-                    </Link>
-                    <Link to="/blog/3" className="flex items-start space-x-3 group">
-                      <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
-                        <img 
-                          src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=100&h=100&fit=crop" 
-                          className="w-full h-full object-cover"
-                          alt="Science of Fermentation"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="font-medium group-hover:text-green-600 transition-colors">The Science of Fermentation</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">6 min read</p>
-                      </div>
-                    </Link>
-                    <Link to="/blog/5" className="flex items-start space-x-3 group">
-                      <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
-                        <img 
-                          src="https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=100&h=100&fit=crop" 
-                          className="w-full h-full object-cover"
-                          alt="Chocolate Avocado Mousse"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="font-medium group-hover:text-green-600 transition-colors">Chocolate Avocado Mousse</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">4 min read</p>
                       </div>
                     </Link>
                   </div>
                 </CardContent>
               </Card>
               
-              <Card className="border-0 shadow-md">
+              <Card className="border-0 shadow-md dark:bg-gray-800">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Popular Tags</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Popular Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {['tempeh', 'fermentation', 'kombucha', 'plant-based', 'vegan', 'protein', 'recipes', 'quick-meals'].map((tag) => (
+                    {/* Example tags - replace with dynamic data or use blogPost.tags */}
+                    {blogPost.tags.slice(0,5).map((tag) => ( // Show some tags from current post or popular ones
                       <Badge key={tag} variant="secondary" className="text-sm">
                         #{tag}
                       </Badge>

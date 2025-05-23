@@ -10,6 +10,7 @@ import { Navigation } from "./components/Navigation";
 import Index from "./pages/Index";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import BlogPostEditor from "./pages/BlogPostEditor"; // Import BlogPostEditor
 import Recipes from "./pages/Recipes";
 import RecipeDetail from "./pages/RecipeDetail";
 import RecipeEditor from "./pages/RecipeEditor";
@@ -34,7 +35,9 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/new" element={<BlogPostEditor />} /> {/* New post route */}
                 <Route path="/blog/:id" element={<BlogPost />} />
+                <Route path="/blog/:id/edit" element={<BlogPostEditor />} /> {/* Edit post route */}
                 <Route path="/recipes" element={<Recipes />} />
                 <Route path="/recipes/:id" element={<RecipeDetail />} />
                 <Route path="/recipes/new" element={<RecipeEditor />} />
