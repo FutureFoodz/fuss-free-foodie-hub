@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,76 +6,70 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-
 const About = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
     message: ""
   });
-
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
     console.log("Contact form submitted:", formData);
     toast({
       title: "Message Sent!",
-      description: "Thank you for contacting us. We'll get back to you soon!",
+      description: "Thank you for contacting us. We'll get back to you soon!"
     });
-    setFormData({ name: "", email: "", subject: "", message: "" });
+    setFormData({
+      name: "",
+      email: "",
+      subject: "",
+      message: ""
+    });
   };
-
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
-
-  const teamMembers = [
-    {
-      name: "Sarah Chen",
-      role: "Founder & Head Chef",
-      bio: "Former molecular gastronomy chef turned plant-based food innovator",
-      image: "photo-1506744038136-46273834b3fb"
-    },
-    {
-      name: "Marcus Rodriguez",
-      role: "Fermentation Specialist",
-      bio: "PhD in Food Science with 15 years of fermentation research",
-      image: "photo-1513836279014-a89f7a76ae86"
-    },
-    {
-      name: "Elena Nakamura",
-      role: "Sustainability Director",
-      bio: "Environmental scientist ensuring our practices support the planet",
-      image: "photo-1465146344425-f00d5f5c8f07"
-    }
-  ];
-
-  const values = [
-    {
-      title: "Transparency",
-      description: "We believe you should know exactly what goes into your food and how it's made.",
-      icon: "🔍"
-    },
-    {
-      title: "Sustainability",
-      description: "Every decision we make considers the impact on our planet and future generations.",
-      icon: "🌱"
-    },
-    {
-      title: "Quality",
-      description: "We never compromise on ingredients, processes, or the final product quality.",
-      icon: "⭐"
-    },
-    {
-      title: "Innovation",
-      description: "Combining traditional methods with modern science to create extraordinary foods.",
-      icon: "🔬"
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-gray-50">
+  const teamMembers = [{
+    name: "Sarah Chen",
+    role: "Founder & Head Chef",
+    bio: "Former molecular gastronomy chef turned plant-based food innovator",
+    image: "photo-1506744038136-46273834b3fb"
+  }, {
+    name: "Marcus Rodriguez",
+    role: "Fermentation Specialist",
+    bio: "PhD in Food Science with 15 years of fermentation research",
+    image: "photo-1513836279014-a89f7a76ae86"
+  }, {
+    name: "Elena Nakamura",
+    role: "Sustainability Director",
+    bio: "Environmental scientist ensuring our practices support the planet",
+    image: "photo-1465146344425-f00d5f5c8f07"
+  }];
+  const values = [{
+    title: "Transparency",
+    description: "We believe you should know exactly what goes into your food and how it's made.",
+    icon: "🔍"
+  }, {
+    title: "Sustainability",
+    description: "Every decision we make considers the impact on our planet and future generations.",
+    icon: "🌱"
+  }, {
+    title: "Quality",
+    description: "We never compromise on ingredients, processes, or the final product quality.",
+    icon: "⭐"
+  }, {
+    title: "Innovation",
+    description: "Combining traditional methods with modern science to create extraordinary foods.",
+    icon: "🔬"
+  }];
+  return <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-green-50 to-emerald-50 py-20">
         <div className="container mx-auto px-4">
@@ -125,11 +118,7 @@ const About = () => {
               </div>
             </div>
             <div className="relative">
-              <img
-                src={`https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=400&fit=crop`}
-                alt="Our kitchen"
-                className="w-full h-96 object-cover rounded-2xl shadow-2xl"
-              />
+              <img src={`https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=400&fit=crop`} alt="Our kitchen" className="w-full h-96 object-cover rounded-2xl shadow-2xl" />
             </div>
           </div>
         </div>
@@ -148,15 +137,13 @@ const About = () => {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {values.map((value, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
+            {values.map((value, index) => <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-8 space-y-4">
                   <div className="text-4xl">{value.icon}</div>
                   <h3 className="text-xl font-semibold text-gray-900">{value.title}</h3>
                   <p className="text-gray-600">{value.description}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -174,22 +161,16 @@ const About = () => {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {teamMembers.map((member, index) => (
-              <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            {teamMembers.map((member, index) => <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="aspect-square overflow-hidden">
-                  <img
-                    src={`https://images.unsplash.com/${member.image}?w=400&h=400&fit=crop`}
-                    alt={member.name}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
+                  <img src={`https://images.unsplash.com/${member.image}?w=400&h=400&fit=crop`} alt={member.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                 </div>
                 <CardContent className="p-6 text-center space-y-3">
-                  <h3 className="text-xl font-semibold text-gray-900">{member.name}</h3>
+                  <h3 className="text-xl font-semibold text-zinc-50">{member.name}</h3>
                   <Badge variant="secondary">{member.role}</Badge>
                   <p className="text-gray-600">{member.bio}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -215,44 +196,22 @@ const About = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="name">Name</Label>
-                        <Input
-                          id="name"
-                          value={formData.name}
-                          onChange={(e) => handleInputChange("name", e.target.value)}
-                          required
-                        />
+                        <Input id="name" value={formData.name} onChange={e => handleInputChange("name", e.target.value)} required />
                       </div>
                       <div>
                         <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange("email", e.target.value)}
-                          required
-                        />
+                        <Input id="email" type="email" value={formData.email} onChange={e => handleInputChange("email", e.target.value)} required />
                       </div>
                     </div>
                     
                     <div>
                       <Label htmlFor="subject">Subject</Label>
-                      <Input
-                        id="subject"
-                        value={formData.subject}
-                        onChange={(e) => handleInputChange("subject", e.target.value)}
-                        required
-                      />
+                      <Input id="subject" value={formData.subject} onChange={e => handleInputChange("subject", e.target.value)} required />
                     </div>
                     
                     <div>
                       <Label htmlFor="message">Message</Label>
-                      <Textarea
-                        id="message"
-                        value={formData.message}
-                        onChange={(e) => handleInputChange("message", e.target.value)}
-                        rows={5}
-                        required
-                      />
+                      <Textarea id="message" value={formData.message} onChange={e => handleInputChange("message", e.target.value)} rows={5} required />
                     </div>
                     
                     <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
@@ -301,8 +260,6 @@ const About = () => {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
-
 export default About;
