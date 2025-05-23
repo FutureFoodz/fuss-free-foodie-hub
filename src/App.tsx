@@ -4,12 +4,17 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { CartProvider } from "./components/ShoppingCart";
 import { Navigation } from "./components/Navigation";
 import Index from "./pages/Index";
 import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import Recipes from "./pages/Recipes";
 import RecipeDetail from "./pages/RecipeDetail";
+import RecipeEditor from "./pages/RecipeEditor";
 import Marketplace from "./pages/Marketplace";
+import ProductDetail from "./pages/ProductDetail";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
@@ -17,24 +22,32 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="min-h-screen bg-white">
-          <Navigation />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/recipes" element={<Recipes />} />
-            <Route path="/recipes/:id" element={<RecipeDetail />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/about" element={<About />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <CartProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+              <Navigation />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:id" element={<BlogPost />} />
+                <Route path="/recipes" element={<Recipes />} />
+                <Route path="/recipes/:id" element={<RecipeDetail />} />
+                <Route path="/recipes/new" element={<RecipeEditor />} />
+                <Route path="/recipes/:id/edit" element={<RecipeEditor />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/marketplace/:id" element={<ProductDetail />} />
+                <Route path="/about" element={<About />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
+      </CartProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

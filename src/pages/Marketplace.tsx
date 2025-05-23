@@ -1,20 +1,21 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ShoppingCart, useCart } from "@/components/ShoppingCart";
+import { useTheme } from "@/components/ThemeProvider";
+import { t } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 
 const Marketplace = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const { addItem } = useCart();
   const { toast } = useToast();
+  const { language } = useTheme();
 
   const categories = ["All", "Protein", "Fermented", "Treats", "Beverages", "Dairy Alternatives"];
 
@@ -87,147 +88,33 @@ const Marketplace = () => {
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
-
-  const OrderForm = ({ product }) => {
-    const [formData, setFormData] = useState({
-      quantity: 1,
-      deliveryAddress: "",
-      contactName: "",
-      email: "",
-      phone: "",
-      allergies: "",
-      notes: "",
-      orderType: "personal"
+  
+  const handleAddToCart = (product) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      category: product.category,
+      quantity: 1
     });
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      console.log("Order submitted:", { product, ...formData });
-      toast({
-        title: "Order Submitted!",
-        description: `Your order for ${product.name} has been received. We'll contact you soon!`,
-      });
-      setSelectedProduct(null);
-    };
-
-    const handleInputChange = (field, value) => {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    return (
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="quantity">Quantity</Label>
-            <Input
-              id="quantity"
-              type="number"
-              min="1"
-              value={formData.quantity}
-              onChange={(e) => handleInputChange("quantity", parseInt(e.target.value))}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="orderType">Order Type</Label>
-            <Select onValueChange={(value) => handleInputChange("orderType", value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select order type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="personal">Personal</SelectItem>
-                <SelectItem value="business">Business</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="contactName">Contact Name</Label>
-          <Input
-            id="contactName"
-            value={formData.contactName}
-            onChange={(e) => handleInputChange("contactName", e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="phone">Phone</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => handleInputChange("phone", e.target.value)}
-              required
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="deliveryAddress">Delivery Address</Label>
-          <Textarea
-            id="deliveryAddress"
-            value={formData.deliveryAddress}
-            onChange={(e) => handleInputChange("deliveryAddress", e.target.value)}
-            placeholder="Full delivery address including postal code"
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="allergies">Food Allergies & Dietary Restrictions</Label>
-          <Textarea
-            id="allergies"
-            value={formData.allergies}
-            onChange={(e) => handleInputChange("allergies", e.target.value)}
-            placeholder="Please list any allergies or dietary restrictions"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="notes">Additional Notes</Label>
-          <Textarea
-            id="notes"
-            value={formData.notes}
-            onChange={(e) => handleInputChange("notes", e.target.value)}
-            placeholder="Any special requests or delivery instructions"
-          />
-        </div>
-
-        <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline" onClick={() => setSelectedProduct(null)}>
-            Cancel
-          </Button>
-          <Button type="submit" className="bg-green-600 hover:bg-green-700">
-            Place Order - {product.price}
-          </Button>
-        </div>
-      </form>
-    );
+    
+    toast({
+      title: t("cart.itemAdded", language) || "Added to cart",
+      description: product.name,
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <section className="bg-white py-16">
+      <section className="bg-white dark:bg-gray-800 py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
               Plant-Based Marketplace
             </h1>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-gray-300">
               Fresh, artisanal, and sustainably made foods delivered to your door
             </p>
           </div>
@@ -235,7 +122,7 @@ const Marketplace = () => {
       </section>
 
       {/* Filters */}
-      <section className="py-8 bg-white border-b">
+      <section className="py-8 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
             {/* Categories */}
@@ -246,21 +133,22 @@ const Marketplace = () => {
                   variant={selectedCategory === category ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCategory(category)}
-                  className={selectedCategory === category ? "bg-green-600 hover:bg-green-700" : ""}
+                  className={selectedCategory === category ? "bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600" : ""}
                 >
                   {category}
                 </Button>
               ))}
             </div>
 
-            {/* Search */}
-            <div className="w-full md:w-auto">
+            {/* Search and Cart */}
+            <div className="flex w-full md:w-auto items-center gap-2">
               <Input
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="md:w-64"
+                className="md:w-64 dark:bg-gray-700 dark:border-gray-600"
               />
+              <ShoppingCart />
             </div>
           </div>
         </div>
@@ -271,44 +159,52 @@ const Marketplace = () => {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div className="aspect-video overflow-hidden">
-                  <img
-                    src={`https://images.unsplash.com/${product.image}?w=400&h=300&fit=crop`}
-                    alt={product.name}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-0 dark:bg-gray-800">
+                <Link to={`/marketplace/${product.id}`} className="block">
+                  <div className="aspect-video overflow-hidden">
+                    <img
+                      src={`https://images.unsplash.com/${product.image}?w=400&h=300&fit=crop`}
+                      alt={product.name}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                </Link>
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <Badge variant="secondary">{product.category}</Badge>
-                      <span className="text-lg font-bold text-green-600">{product.price}</span>
+                      <span className="text-lg font-bold text-green-600 dark:text-green-400">{product.price}</span>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900">{product.name}</h3>
-                    <p className="text-gray-600">{product.description}</p>
-                    <p className="text-sm text-gray-500">{product.details}</p>
+                    <Link to={`/marketplace/${product.id}`}>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400">
+                        {product.name}
+                      </h3>
+                    </Link>
+                    <p className="text-gray-600 dark:text-gray-300">{product.description}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{product.details}</p>
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm ${product.inStock ? 'text-green-600' : 'text-red-500'}`}>
-                        {product.inStock ? 'In Stock' : 'Out of Stock'}
+                      <span className={`text-sm ${product.inStock 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-red-500'}`}
+                      >
+                        {product.inStock 
+                          ? t("product.inStock", language) || "In Stock" 
+                          : t("product.outOfStock", language) || "Out of Stock"}
                       </span>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            className="bg-green-600 hover:bg-green-700"
-                            disabled={!product.inStock}
-                            onClick={() => setSelectedProduct(product)}
-                          >
-                            Order Now
+                      <div className="flex gap-2">
+                        <Link to={`/marketplace/${product.id}`}>
+                          <Button variant="outline" className="dark:border-gray-600 dark:text-gray-300">
+                            {t("product.details", language) || "Details"}
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>Order {product?.name}</DialogTitle>
-                          </DialogHeader>
-                          {selectedProduct && <OrderForm product={selectedProduct} />}
-                        </DialogContent>
-                      </Dialog>
+                        </Link>
+                        <Button 
+                          className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600"
+                          disabled={!product.inStock}
+                          onClick={() => handleAddToCart(product)}
+                        >
+                          {t("action.addToCart", language) || "Add to Cart"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -318,7 +214,7 @@ const Marketplace = () => {
 
           {filteredProducts.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No products found. Try adjusting your search or filters.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-lg">No products found. Try adjusting your search or filters.</p>
             </div>
           )}
         </div>
