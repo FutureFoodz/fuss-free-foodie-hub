@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,19 +6,50 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import RecipeSocialShare from "@/components/RecipeSocialShare";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "@/components/ThemeProvider";
 import { t } from "@/lib/i18n";
+import { markdownToHtml } from "@/lib/utils";
+
+interface Recipe {
+  id: number;
+  title: string;
+  category: string;
+  prepTime: string;
+  cookTime: string;
+  servings: number;
+  difficulty: string;
+  description: string;
+  image: string;
+  tags: string[];
+  ingredients: string;
+  instructions: string;
+  notes: string;
+}
+
+interface Comment {
+  id: number;
+  name: string;
+  date: string;
+  content: string;
+  avatar: string;
+}
 
 const RecipeDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { language } = useTheme();
-  const [comment, setComment] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [comments, setComments] = useState([
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [commentText, setCommentText] = useState("");
+  const [commentName, setCommentName] = useState("");
+  const [commentEmail, setCommentEmail] = useState("");
+  // Comments are managed in local state for this example.
+  // In a real application, these would likely be fetched from a backend.
+  const [comments, setComments] = useState<Comment[]>([
     {
       id: 1,
       name: "Jamie Wilson",
@@ -36,71 +66,41 @@ const RecipeDetail = () => {
     }
   ]);
 
-  // Parse ingredients to create checklist
   const [checkedIngredients, setCheckedIngredients] = useState<string[]>([]);
 
-  // Mock recipe data with markdown content
-  const recipe = {
-    id: id,
-    title: "5-Minute Tempeh Stir Fry",
-    category: "Dinner",
-    prepTime: "5 min",
-    cookTime: "10 min",
-    servings: 2,
-    difficulty: "Easy",
-    description: "Quick and delicious plant-based protein that doesn't compromise on flavor. Perfect for busy weeknights.",
-    image: "photo-1618160702438-9b02ab6515c9",
-    tags: ["tempeh", "quick-meals", "protein"],
-    ingredients: `
-# Ingredients
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/data/recipes.json");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const recipesData: Recipe[] = await response.json();
+        const recipeId = parseInt(id as string);
+        const foundRecipe = recipesData.find(r => r.id === recipeId);
+        
+        if (foundRecipe) {
+          setRecipe(foundRecipe);
+        } else {
+          setError("Recipe not found.");
+        }
+      } catch (e) {
+        if (e instanceof Error) {
+          setError(`Failed to load recipe: ${e.message}`);
+        } else {
+          setError("Failed to load recipe: An unknown error occurred");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-- 200g tempeh, cubed
-- 2 tbsp soy sauce or tamari
-- 1 tbsp maple syrup
-- 1 clove garlic, minced
-- 2 cups mixed vegetables (bell peppers, broccoli, snap peas work well)
-- 1 tbsp cooking oil
-- Optional garnishes:
-  - 1 tsp sriracha
-  - 1 tbsp sesame seeds
-  - 2 green onions, sliced
-    `,
-    instructions: `
-# Instructions
+    if (id) {
+      fetchRecipe();
+    }
+  }, [id]);
 
-1. **Prepare the sauce**: In a small bowl, whisk together soy sauce, maple syrup, and minced garlic.
-
-2. **Cut and prepare**: Cube the tempeh into bite-sized pieces. Chop vegetables into similar-sized pieces for even cooking.
-
-3. **Heat the pan**: Heat oil in a wok or large skillet over medium-high heat.
-
-4. **Cook tempeh**: Add tempeh to the hot oil and cook for 3-4 minutes, tossing occasionally until lightly browned on multiple sides.
-
-5. **Add vegetables**: Add your chosen vegetables to the pan and stir-fry for 2-3 minutes until beginning to soften but still crisp.
-
-6. **Add sauce**: Pour the sauce over the tempeh and vegetables, stirring quickly to coat. Cook for another 1-2 minutes until the sauce thickens slightly.
-
-7. **Serve**: Transfer to bowls and top with optional garnishes if desired.
-
-> **Pro tip**: For extra flavor, marinate the tempeh in the sauce for 15 minutes before cooking if you have time.
-
-![Tempeh stir fry](https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=400&fit=crop)
-    `,
-    notes: `
-# Chef's Notes
-
-This recipe is incredibly versatile:
-
-- **Protein swap**: No tempeh? Try using tofu, seitan, or chickpeas instead.
-- **Vegetable options**: Use whatever vegetables you have on hand - carrots, snow peas, mushrooms, and bok choy all work great.
-- **Sauce variations**: Add 1 tsp of grated ginger or a splash of rice vinegar to change up the flavor profile.
-- **Serving suggestions**: Serve with brown rice, quinoa, or rice noodles for a complete meal.
-
-*Remember, the #NoFuss philosophy is about working with what you have!*
-    `
-  };
-
-  // Extract ingredients from markdown for checklist
   const extractIngredients = (markdown: string): string[] => {
     if (!markdown) return [];
     const lines = markdown.split('\n');
@@ -109,7 +109,7 @@ This recipe is incredibly versatile:
       .map(line => line.trim().substring(1).trim());
   };
   
-  const ingredientList = extractIngredients(recipe.ingredients);
+  const ingredientList = recipe ? extractIngredients(recipe.ingredients) : [];
 
   const toggleIngredient = (ingredient: string) => {
     setCheckedIngredients(prev =>
@@ -119,26 +119,37 @@ This recipe is incredibly versatile:
     );
   };
 
-  // URL for social sharing
   const shareUrl = window.location.href;
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim() || !name.trim() || !email.trim()) return;
+    if (!commentText.trim() || !commentName.trim() || !commentEmail.trim()) return;
     
-    const newComment = {
+    const newComment: Comment = {
       id: comments.length + 1,
-      name: name,
+      name: commentName,
       date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      content: comment,
-      avatar: name.charAt(0).toUpperCase()
+      content: commentText,
+      avatar: commentName.charAt(0).toUpperCase()
     };
     
     setComments([newComment, ...comments]);
-    setComment("");
-    setName("");
-    setEmail("");
+    setCommentText("");
+    setCommentName("");
+    setCommentEmail("");
   };
+
+  if (loading) {
+    return <div className="container mx-auto px-4 py-12 text-center">Loading recipe...</div>;
+  }
+
+  if (error) {
+    return <div className="container mx-auto px-4 py-12 text-center text-red-500">{error}</div>;
+  }
+
+  if (!recipe) {
+    return <div className="container mx-auto px-4 py-12 text-center">Recipe not found.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -185,7 +196,6 @@ This recipe is incredibly versatile:
                 {/* Description */}
                 <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">{recipe.description}</p>
                 
-                {/* Tabs for Recipe Sections */}
                 <Tabs defaultValue="ingredients" className="mt-6">
                   <TabsList>
                     <TabsTrigger value="ingredients">{t("recipe.ingredients", language)}</TabsTrigger>
@@ -195,45 +205,49 @@ This recipe is incredibly versatile:
                   
                   <TabsContent value="ingredients" className="mt-4">
                     <div className="prose prose-lg dark:prose-invert max-w-none">
-                      {/* Ingredients as checklist */}
                       <h1 className="text-2xl font-bold mt-4 mb-2">Ingredients</h1>
-                      <div className="space-y-2">
-                        {ingredientList.map((ingredient, idx) => (
-                          <div key={idx} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`ingredient-${idx}`} 
-                              checked={checkedIngredients.includes(ingredient)}
-                              onCheckedChange={() => toggleIngredient(ingredient)}
-                            />
-                            <label 
-                              htmlFor={`ingredient-${idx}`}
-                              className={`text-lg ${checkedIngredients.includes(ingredient) ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}
-                            >
-                              {ingredient}
-                            </label>
+                      {recipe.ingredients.trim() === "" ? (
+                        <p>No ingredients listed.</p>
+                      ) : (
+                        <>
+                          <div className="space-y-2">
+                            {ingredientList.map((ingredient, idx) => (
+                              <div key={idx} className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id={`ingredient-${idx}`} 
+                                  checked={checkedIngredients.includes(ingredient)}
+                                  onCheckedChange={() => toggleIngredient(ingredient)}
+                                />
+                                <label 
+                                  htmlFor={`ingredient-${idx}`}
+                                  className={`text-lg ${checkedIngredients.includes(ingredient) ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}
+                                >
+                                  {ingredient}
+                                </label>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                        Check items as you gather them
-                      </div>
+                          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                            Check items as you gather them
+                          </div>
+                        </>
+                      )}
                     </div>
                   </TabsContent>
                   
                   <TabsContent value="instructions" className="mt-4">
                     <div className="prose prose-lg dark:prose-invert max-w-none">
-                      <div dangerouslySetInnerHTML={{ __html: markdownToHtml(recipe.instructions) }} />
+                      {recipe.instructions.trim() === "" ? <p>No instructions provided.</p> : <div dangerouslySetInnerHTML={{ __html: markdownToHtml(recipe.instructions) }} />}
                     </div>
                   </TabsContent>
                   
                   <TabsContent value="notes" className="mt-4">
                     <div className="prose prose-lg dark:prose-invert max-w-none">
-                      <div dangerouslySetInnerHTML={{ __html: markdownToHtml(recipe.notes) }} />
+                     {recipe.notes.trim() === "" ? <p>No notes available.</p> : <div dangerouslySetInnerHTML={{ __html: markdownToHtml(recipe.notes) }} />}
                     </div>
                   </TabsContent>
                 </Tabs>
                 
-                {/* Tags */}
                 <div className="mt-8 pt-6 border-t dark:border-gray-700 flex flex-wrap gap-2">
                   {recipe.tags.map((tag, index) => (
                     <Badge key={index} variant="outline" className="text-sm dark:border-gray-600">
@@ -242,7 +256,6 @@ This recipe is incredibly versatile:
                   ))}
                 </div>
 
-                {/* Share buttons */}
                 <div className="mt-8 pt-6 border-t dark:border-gray-700">
                   <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{t("action.share", language)}</h3>
                   <RecipeSocialShare
@@ -252,33 +265,31 @@ This recipe is incredibly versatile:
                   />
                 </div>
                 
-                {/* Comments section */}
                 <div className="mt-8 pt-6 border-t dark:border-gray-700">
                   <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">{t("blog.comments", language)} ({comments.length})</h3>
                   
-                  {/* Comment form */}
                   <Card className="mb-8 border-0 shadow-sm dark:bg-gray-700">
                     <CardContent className="p-6">
                       <h4 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">{t("blog.writeComment", language)}</h4>
                       <form onSubmit={handleSubmitComment} className="space-y-4">
                         <Textarea
-                          value={comment}
-                          onChange={(e) => setComment(e.target.value)}
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
                           placeholder="Your comment"
                           className="resize-none dark:bg-gray-800 dark:border-gray-600"
                           required
                         />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <Input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={commentName}
+                            onChange={(e) => setCommentName(e.target.value)}
                             placeholder="Name"
                             className="dark:bg-gray-800 dark:border-gray-600"
                             required
                           />
                           <Input
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={commentEmail}
+                            onChange={(e) => setCommentEmail(e.target.value)}
                             placeholder="Email"
                             type="email"
                             className="dark:bg-gray-800 dark:border-gray-600"
@@ -292,7 +303,6 @@ This recipe is incredibly versatile:
                     </CardContent>
                   </Card>
                   
-                  {/* Comments list */}
                   <div className="space-y-6">
                     {comments.map((comment) => (
                       <div key={comment.id} className="flex space-x-4 p-4 rounded-lg bg-white dark:bg-gray-700 shadow-sm">
@@ -313,7 +323,6 @@ This recipe is incredibly versatile:
               </CardContent>
             </Card>
             
-            {/* Edit Recipe Button for Authorized Users */}
             <div className="mt-6 flex justify-end">
               <Link to={`/recipes/${id}/edit`}>
                 <Button variant="outline" className="dark:border-gray-600 dark:text-gray-300">
@@ -323,10 +332,8 @@ This recipe is incredibly versatile:
             </div>
           </div>
           
-          {/* Sidebar */}
           <div>
             <div className="sticky top-20 space-y-6">
-              {/* Sharing Card */}
               <Card className="border-0 shadow-md dark:bg-gray-800">
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{t("action.share", language)}</h3>
@@ -338,10 +345,10 @@ This recipe is incredibly versatile:
                 </CardContent>
               </Card>
               
-              {/* Related Recipes Card */}
               <Card className="border-0 shadow-md dark:bg-gray-800">
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Related Recipes</h3>
+                  {/* TODO: Fetch and display actual related recipes */}
                   <div className="space-y-4">
                     <Link to="/recipes/2" className="flex items-start space-x-3 group">
                       <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
@@ -356,32 +363,7 @@ This recipe is incredibly versatile:
                         <p className="text-sm text-gray-500 dark:text-gray-400">Dessert • 10 min</p>
                       </div>
                     </Link>
-                    <Link to="/recipes/3" className="flex items-start space-x-3 group">
-                      <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
-                        <img 
-                          src="https://images.unsplash.com/photo-1550507992-eb63ffee0847?w=100&h=100&fit=crop" 
-                          className="w-full h-full object-cover"
-                          alt="Vegan Cheese Platter"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="font-medium group-hover:text-green-600 transition-colors dark:text-white">Vegan Cheese Platter</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Snacks • 15 min</p>
-                      </div>
-                    </Link>
-                    <Link to="/recipes/6" className="flex items-start space-x-3 group">
-                      <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
-                        <img 
-                          src="https://images.unsplash.com/photo-1603046891744-76e6481cf539?w=100&h=100&fit=crop" 
-                          className="w-full h-full object-cover"
-                          alt="Tempeh Reuben Sandwich"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="font-medium group-hover:text-green-600 transition-colors dark:text-white">Tempeh Reuben Sandwich</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Lunch • 18 min</p>
-                      </div>
-                    </Link>
+                    {/* Add more related recipes here */}
                   </div>
                 </CardContent>
               </Card>
@@ -392,38 +374,5 @@ This recipe is incredibly versatile:
     </div>
   );
 };
-
-// Simple markdown to HTML conversion
-// In a real app, you would use a proper markdown library like marked.js
-function markdownToHtml(markdown: string) {
-  if (!markdown) return '';
-  
-  return markdown
-    // Headers
-    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')
-    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-3 mb-2">$1</h2>')
-    .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-2 mb-1">$1</h3>')
-    // Bold
-    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-    // Lists
-    .replace(/^\- (.*$)/gim, '<li class="ml-4">$1</li>')
-    .replace(/<\/li>\n<li/gim, '</li><li')
-    .replace(/(<li.*<\/li>)/gim, '<ul class="list-disc my-2">$1</ul>')
-    // Numbered lists
-    .replace(/^\d+\. (.*$)/gim, '<li class="ml-4">$1</li>')
-    .replace(/(<li.*<\/li>)/gim, '<ol class="list-decimal my-2">$1</ol>')
-    // Blockquotes
-    .replace(/^\> (.*$)/gim, '<blockquote class="border-l-4 border-gray-300 pl-4 py-2 my-4 text-gray-600 dark:text-gray-400">$1</blockquote>')
-    // Images
-    .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img src="$2" alt="$1" class="rounded-md my-4 max-w-full h-auto">')
-    // Paragraphs
-    .replace(/^\s*(\n)?(.+)/gim, function(m) {
-      return /\<(\/)?(h1|h2|h3|h4|h5|h6|blockquote|ol|ul|li|img)/.test(m) ? m : '<p class="my-2">' + m + '</p>';
-    })
-    // Line breaks
-    .replace(/\n$/gim, '<br />');
-}
 
 export default RecipeDetail;

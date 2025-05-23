@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,155 +7,69 @@ import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/ThemeProvider";
 import { t } from "@/lib/i18n";
 
+interface Recipe {
+  id: number;
+  title: string;
+  category: string;
+  prepTime: string;
+  cookTime: string;
+  difficulty: string;
+  description: string; // recipes.json provides 'description' directly
+  image: string;
+  tags: string[];
+  // Note: ingredients, instructions, notes are not included for the recipe listing page
+}
+
 const Recipes = () => {
+  const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const { language } = useTheme();
 
   const categories = ["All", "Breakfast", "Lunch", "Dinner", "Dessert", "Snacks", "Drinks"];
 
-  const recipes = [
-    {
-      id: 1,
-      title: "5-Minute Tempeh Stir Fry",
-      category: "Dinner",
-      prepTime: "5 min",
-      cookTime: "10 min",
-      difficulty: "Easy",
-      excerpt: "Quick and delicious plant-based protein that doesn't compromise on flavor. Perfect for busy weeknights.",
-      image: "photo-1618160702438-9b02ab6515c9",
-      tags: ["tempeh", "quick-meals", "protein"]
-    },
-    {
-      id: 2,
-      title: "Chocolate Avocado Mousse",
-      category: "Dessert",
-      prepTime: "10 min",
-      cookTime: "0 min",
-      difficulty: "Easy",
-      excerpt: "Rich, creamy, and surprisingly healthy dessert that will fool even the most skeptical sweet tooth.",
-      image: "photo-1582562124811-c09040d0a901",
-      tags: ["dessert", "chocolate", "healthy"]
-    },
-    {
-      id: 3,
-      title: "Vegan Cheese Platter",
-      category: "Snacks",
-      prepTime: "15 min",
-      cookTime: "0 min",
-      difficulty: "Medium",
-      excerpt: "Impress your guests with this elegant spread of homemade plant-based cheeses and accompaniments.",
-      image: "photo-1550507992-eb63ffee0847",
-      tags: ["cheese", "entertaining", "plant-based"]
-    },
-    {
-      id: 4,
-      title: "Kimchi Breakfast Bowl",
-      category: "Breakfast",
-      prepTime: "5 min",
-      cookTime: "5 min",
-      difficulty: "Easy",
-      excerpt: "Start your day with a probiotic-rich bowl that combines the tangy kick of kimchi with protein-packed tofu.",
-      image: "photo-1547592180-85f173990888",
-      tags: ["kimchi", "breakfast", "bowl"]
-    },
-    {
-      id: 5,
-      title: "Kombucha Smoothie Bowl",
-      category: "Breakfast",
-      prepTime: "10 min",
-      cookTime: "0 min",
-      difficulty: "Easy",
-      excerpt: "A refreshing smoothie bowl featuring the subtle tang of homemade kombucha and seasonal fruits.",
-      image: "photo-1577805947697-89e18249d767",
-      tags: ["kombucha", "smoothie", "breakfast"]
-    },
-    {
-      id: 6,
-      title: "Tempeh Reuben Sandwich",
-      category: "Lunch",
-      prepTime: "10 min",
-      cookTime: "8 min",
-      difficulty: "Medium",
-      excerpt: "A plant-based spin on the classic sandwich with marinated tempeh, sauerkraut and homemade dressing.",
-      image: "photo-1603046891744-76e6481cf539",
-      tags: ["tempeh", "sandwich", "lunch"]
-    },
-    {
-      id: 7,
-      title: "Mushroom Risotto",
-      category: "Dinner",
-      prepTime: "15 min",
-      cookTime: "25 min",
-      difficulty: "Medium",
-      excerpt: "Creamy, comforting risotto packed with umami flavors from mixed mushrooms and nutritional yeast.",
-      image: "photo-1476124369491-e7addf5db371",
-      tags: ["risotto", "mushroom", "comfort-food"]
-    },
-    {
-      id: 8,
-      title: "Matcha Chia Pudding",
-      category: "Breakfast",
-      prepTime: "5 min",
-      cookTime: "0 min",
-      difficulty: "Easy",
-      excerpt: "Energizing breakfast pudding combining the antioxidant power of matcha with omega-rich chia seeds.",
-      image: "photo-1495214783159-3503fd1b572d",
-      tags: ["matcha", "chia", "pudding"]
-    },
-    {
-      id: 9,
-      title: "Fermented Hot Sauce",
-      category: "Snacks",
-      prepTime: "20 min",
-      cookTime: "0 min",
-      difficulty: "Hard",
-      excerpt: "Tangy, spicy, and full of gut-friendly probiotics. This fermented hot sauce gets better with age.",
-      image: "photo-1589632883080-2482667ceb9e",
-      tags: ["fermented", "hot-sauce", "chili"]
-    },
-    {
-      id: 10,
-      title: "Ginger Kombucha Mojito",
-      category: "Drinks",
-      prepTime: "5 min",
-      cookTime: "0 min",
-      difficulty: "Easy",
-      excerpt: "A refreshing non-alcoholic spin on the classic mojito using homemade ginger kombucha.",
-      image: "photo-1536935338788-846bb9981813",
-      tags: ["kombucha", "drinks", "mocktail"]
-    },
-    {
-      id: 11,
-      title: "Cashew Cheese Stuffed Peppers",
-      category: "Lunch",
-      prepTime: "15 min",
-      cookTime: "25 min",
-      difficulty: "Medium",
-      excerpt: "Bell peppers filled with savory cashew cheese and herbs, baked to perfection.",
-      image: "photo-1625944525533-363023948818",
-      tags: ["cashew", "cheese", "peppers"]
-    },
-    {
-      id: 12,
-      title: "Miso Roasted Vegetables",
-      category: "Dinner",
-      prepTime: "10 min",
-      cookTime: "30 min",
-      difficulty: "Easy",
-      excerpt: "Seasonal vegetables elevated with the unique umami flavor of fermented miso paste.",
-      image: "photo-1567620832903-9fc6debc209f",
-      tags: ["miso", "roasted", "vegetables"]
-    }
-  ];
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/data/recipes.json");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: Recipe[] = await response.json();
+        // recipes.json uses 'description' field, which matches the Recipe interface.
+        // If 'excerpt' were used in JSON, a mapping step would be needed here.
+        setAllRecipes(data);
+      } catch (e) {
+        if (e instanceof Error) {
+          setError(`Failed to load recipes: ${e.message}`);
+        } else {
+          setError("Failed to load recipes: An unknown error occurred");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRecipes();
+  }, []);
 
-  const filteredRecipes = recipes.filter(recipe => {
+  const filteredRecipes = allRecipes.filter(recipe => {
     const matchesCategory = selectedCategory === "All" || recipe.category === selectedCategory;
     const matchesSearch = recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         recipe.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         recipe.description.toLowerCase().includes(searchTerm.toLowerCase()) || // Changed from excerpt to description
                          recipe.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
+
+  if (loading) {
+    return <div className="container mx-auto px-4 py-12 text-center">Loading recipes...</div>;
+  }
+
+  if (error) {
+    return <div className="container mx-auto px-4 py-12 text-center text-red-500">{error}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -219,7 +132,7 @@ const Recipes = () => {
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <CardContent className="p-4 flex flex-col h-[calc(100%-33.33%)]">
+                <CardContent className="p-4 flex flex-col h-[calc(100%-150px)]">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center justify-between">
                       <Badge variant="secondary">{recipe.category}</Badge>
@@ -228,7 +141,8 @@ const Recipes = () => {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {recipe.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{recipe.excerpt}</p>
+                    {/* Ensure your Recipe interface and data use 'description' if that's what recipes.json provides */}
+                    <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{recipe.description}</p>
                     <div className="flex gap-2">
                       <Badge variant="outline" className="text-xs dark:border-gray-600">
                         Prep: {recipe.prepTime}
@@ -257,7 +171,7 @@ const Recipes = () => {
             ))}
           </div>
 
-          {filteredRecipes.length === 0 && (
+          {filteredRecipes.length === 0 && !loading && (
             <div className="text-center py-12">
               <p className="text-gray-500 dark:text-gray-400 text-lg">No recipes found. Try adjusting your search or filters.</p>
             </div>

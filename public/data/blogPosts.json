@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "title": "5-Minute Tempeh Stir Fry",
+    "category": "Recipes",
+    "readTime": "3 min read",
+    "author": "Sofia Lindgren",
+    "date": "March 15, 2024",
+    "content": "Quick and delicious plant-based protein that doesn't compromise on flavor. Perfect for busy weeknights.\n\n## Why Tempeh?\n\nTempeh is not just delicious; it's packed with nutrition. This fermented soybean product provides complete protein, essential amino acids, and beneficial probiotics that support gut health. Unlike many processed meat substitutes, tempeh is minimally processed and free from artificial additives.\n\nIts firm texture makes it excellent for stir-fries, while its nutty flavor complements a wide range of seasonings. Whether you're a seasoned vegan chef or just exploring plant-based options, tempeh deserves a place in your kitchen rotation.\n\n## Key Ingredients\n\nThe beauty of this stir-fry is its simplicity. You'll need:\n\n- 200g tempeh, cubed\n- 2 tbsp soy sauce or tamari\n- 1 tbsp maple syrup\n- 1 clove garlic, minced\n- Fresh vegetables of your choice (bell peppers, broccoli, snap peas work well)\n- 1 tbsp cooking oil\n- Optional: sriracha, sesame seeds, green onions for garnish\n\n## The #NoFuss Approach\n\nWhat makes this recipe truly special is its alignment with our #NoFuss philosophy. No complicated techniques, no hard-to-find ingredients, and minimal cleanup. Just honest, wholesome food that nourishes both body and planet.\n\nTry it tonight and tag us in your creations with #NoFuss and #FutureFoodz!",
+    "image": "photo-1618160702438-9b02ab6515c9",
+    "tags": ["tempeh", "quick-meals", "protein", "plant-based", "vegan"]
+  },
+  {
+    "id": 2,
+    "title": "DIY Kombucha at Home",
+    "category": "DIY",
+    "readTime": "8 min read",
+    "author": "Admin",
+    "date": "March 12, 2024",
+    "content": "Learn to brew your own probiotic-rich kombucha with simple ingredients and basic equipment.",
+    "image": "photo-1465146344425-f00d5f5c8f07",
+    "tags": ["kombucha", "fermentation", "probiotics"]
+  },
+  {
+    "id": 3,
+    "title": "The Science of Fermentation",
+    "category": "Education",
+    "readTime": "6 min read",
+    "author": "Admin",
+    "date": "March 10, 2024",
+    "content": "Discover how ancient preservation methods create modern superfoods rich in probiotics and nutrients.",
+    "image": "photo-1506744038136-46273834b3fb",
+    "tags": ["science", "fermentation", "health"]
+  },
+  {
+    "id": 4,
+    "title": "Vegan Cheese Making Workshop",
+    "category": "Events",
+    "readTime": "2 min read",
+    "author": "Admin",
+    "date": "March 8, 2024",
+    "content": "Join us for a hands-on workshop where you'll learn to make artisanal vegan cheeses from scratch.",
+    "image": "photo-1513836279014-a89f7a76ae86",
+    "tags": ["workshop", "cheese", "hands-on"]
+  },
+  {
+    "id": 5,
+    "title": "Chocolate Avocado Mousse",
+    "category": "Recipes",
+    "readTime": "4 min read",
+    "author": "Admin",
+    "date": "March 5, 2024",
+    "content": "Rich, creamy, and surprisingly healthy dessert that will fool even the most skeptical sweet tooth.",
+    "image": "photo-1582562124811-c09040d0a901",
+    "tags": ["dessert", "chocolate", "healthy"]
+  },
+  {
+    "id": 6,
+    "title": "Building Your Fermentation Station",
+    "category": "DIY",
+    "readTime": "10 min read",
+    "author": "Admin",
+    "date": "March 3, 2024",
+    "content": "Set up the perfect home fermentation station with our complete guide to equipment and techniques.",
+    "image": "photo-1721322800607-8c38375eef04",
+    "tags": ["setup", "equipment", "fermentation"]
+  }
+]
