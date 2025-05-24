@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,106 +10,43 @@ import { useTheme } from "@/components/ThemeProvider";
 import { t } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  category: string;
+  image: string;
+  inStock: boolean;
+  details: string;
+  featured?: boolean; // featured is optional in the marketplace view
+}
+
 const Marketplace = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const { addItem } = useCart();
   const { toast } = useToast();
   const { language } = useTheme();
 
   const categories = ["All", "Protein", "Fermented", "Treats", "Beverages", "Dairy Alternatives"];
 
-  const products = [
-    {
-      id: 1,
-      name: "Artisanal Tempeh",
-      description: "Handcrafted fermented soybean goodness with traditional Indonesian methods",
-      price: "$12.99",
-      category: "Protein",
-      image: "photo-1618160702438-9b02ab6515c9",
-      inStock: true,
-      details: "Organic soybeans, fermented for 48 hours, rich in probiotics and protein"
-    },
-    {
-      id: 2,
-      name: "Dark Chocolate Bliss",
-      description: "70% cacao, ethically sourced from sustainable farms",
-      price: "$8.50",
-      category: "Treats",
-      image: "photo-1465146344425-f00d5f5c8f07",
-      inStock: true,
-      details: "Single-origin cacao, no refined sugars, naturally sweetened"
-    },
-    {
-      id: 3,
-      name: "Probiotic Kimchi",
-      description: "Traditional fermented vegetables packed with beneficial bacteria",
-      price: "$9.75",
-      category: "Fermented",
-      image: "photo-1582562124811-c09040d0a901",
-      inStock: true,
-      details: "Napa cabbage, Korean chili flakes, naturally fermented for 2 weeks"
-    },
-    {
-      id: 4,
-      name: "Kombucha Variety Pack",
-      description: "Three flavors of our signature fermented tea",
-      price: "$24.99",
-      category: "Beverages",
-      image: "photo-1506744038136-46273834b3fb",
-      inStock: true,
-      details: "Ginger Lemon, Berry Hibiscus, and Green Tea varieties"
-    },
-    {
-      id: 5,
-      name: "Cashew Cream Cheese",
-      description: "Smooth and creamy dairy-free cheese alternative",
-      price: "$11.25",
-      category: "Dairy Alternatives",
-      image: "photo-1513836279014-a89f7a76ae86",
-      inStock: false,
-      details: "Raw cashews, nutritional yeast, cultured for authentic tangy flavor"
-    },
-    {
-      id: 6,
-      name: "Miso Paste Collection",
-      description: "Traditional white and red miso for authentic umami",
-      price: "$18.50",
-      category: "Fermented",
-      image: "photo-1721322800607-8c38375eef04",
-      inStock: true,
-      details: "Aged 6 months, made with organic soybeans and koji starter"
-    },
-    {
-      id: 7,
-      name: "Coconut Yogurt",
-      description: "Creamy dairy-free yogurt with live cultures",
-      price: "$7.99",
-      category: "Dairy Alternatives",
-      image: "photo-1558680069-f4a46f5aa8e8",
-      inStock: true,
-      details: "Made from organic coconuts, rich in probiotics with a tangy flavor"
-    },
-    {
-      id: 8,
-      name: "Fermentation Starter Kit",
-      description: "Everything you need to start fermenting at home",
-      price: "$34.99",
-      category: "Fermented",
-      image: "photo-1605478185737-99924509aeb4",
-      inStock: true,
-      details: "Includes fermentation vessels, airlocks, and starter cultures"
-    }
-  ];
+  useEffect(() => {
+    fetch("/data/products.json")
+      .then((response) => response.json())
+      .then((data: Product[]) => setAllProducts(data))
+      .catch((error) => console.error("Error fetching products:", error));
+  }, []);
 
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = allProducts.filter(product => {
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
   
-  const handleAddToCart = (product) => {
+  const handleAddToCart = (product: Product) => {
     addItem({
       id: product.id,
       name: product.name,

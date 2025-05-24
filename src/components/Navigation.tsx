@@ -4,22 +4,46 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Sun, Moon, Globe } from "lucide-react";
+import { Sun, Moon, Globe, LogOut } from "lucide-react"; // Added LogOut icon
 import { useTheme } from "./ThemeProvider";
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 import { t } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast"; // For logout notification
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { theme, toggleTheme, language, setLanguage } = useTheme();
+  const { currentUser, logout } = useAuth(); // Get auth context
+  const { toast } = useToast();
 
-  const navItems = [
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      // No need to navigate, AuthProvider will cause re-render
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({ title: "Logout Error", description: "Failed to log out. Please try again.", variant: "destructive" });
+    }
+  };
+
+  const baseNavItems = [
     { name: t("nav.home", language), path: "/" },
     { name: t("nav.blog", language), path: "/blog" },
     { name: t("nav.recipes", language), path: "/recipes" },
     { name: t("nav.marketplace", language), path: "/marketplace" },
     { name: t("nav.about", language), path: "/about" },
   ];
+
+  const authNavItems = currentUser
+    ? [] // No "Logout" text link in main nav for now, using button instead. Could add "Profile" here.
+    : [
+        { name: t("nav.login", language) || "Login", path: "/login" },
+        { name: t("nav.signup", language) || "Signup", path: "/signup" },
+      ];
+
+  const navItems = [...baseNavItems, ...authNavItems];
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -51,9 +75,18 @@ export const Navigation = () => {
             <Button className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 rounded-full">
               #NoFuss
             </Button>
+            {currentUser && (
+              <Button 
+                variant="outline" 
+                onClick={handleLogout} 
+                className="text-sm font-medium rounded-full border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <LogOut className="mr-2 h-4 w-4" /> {t("nav.logout", language) || "Logout"}
+              </Button>
+            )}
           </div>
 
-          {/* Theme and Language toggles */}
+          {/* Theme and Language toggles & Mobile Auth Button */}
           <div className="hidden md:flex md:items-center md:space-x-2">
             <Button
               variant="ghost"
@@ -138,12 +171,12 @@ export const Navigation = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col space-y-4 mt-8">
-                  {navItems.map((item) => (
+                  {navItems.map((item) => ( // These are baseNavItems + non-auth items
                     <Link
                       key={item.name}
                       to={item.path}
                       onClick={() => setIsOpen(false)}
-                      className={`text-lg font-medium transition-colors hover:text-green-600 ${
+                      className={`block px-4 py-2 text-lg font-medium transition-colors hover:text-green-600 ${
                         isActive(item.path) 
                           ? "text-green-600 dark:text-green-400" 
                           : "text-gray-700 dark:text-gray-300"
@@ -152,6 +185,19 @@ export const Navigation = () => {
                       {item.name}
                     </Link>
                   ))}
+                  {/* Mobile Logout Button */}
+                  {currentUser && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpen(false);
+                      }}
+                      className="w-full justify-start px-4 py-2 text-lg font-medium text-gray-700 dark:text-gray-300 hover:text-green-600"
+                    >
+                       <LogOut className="mr-2 h-5 w-5" /> {t("nav.logout", language) || "Logout"}
+                    </Button>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>
