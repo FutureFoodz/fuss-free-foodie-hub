@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,10 +15,9 @@ interface Recipe {
   prepTime: string;
   cookTime: string;
   difficulty: string;
-  description: string; // recipes.json provides 'description' directly
+  description: string;
   image: string;
   tags: string[];
-  // Note: ingredients, instructions, notes are not included for the recipe listing page
 }
 
 const Recipes = () => {
@@ -39,8 +39,6 @@ const Recipes = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data: Recipe[] = await response.json();
-        // recipes.json uses 'description' field, which matches the Recipe interface.
-        // If 'excerpt' were used in JSON, a mapping step would be needed here.
         setAllRecipes(data);
       } catch (e) {
         if (e instanceof Error) {
@@ -58,7 +56,7 @@ const Recipes = () => {
   const filteredRecipes = allRecipes.filter(recipe => {
     const matchesCategory = selectedCategory === "All" || recipe.category === selectedCategory;
     const matchesSearch = recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         recipe.description.toLowerCase().includes(searchTerm.toLowerCase()) || // Changed from excerpt to description
+                         recipe.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          recipe.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
@@ -122,9 +120,9 @@ const Recipes = () => {
       {/* Recipe Cards */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredRecipes.map((recipe) => (
-              <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-0 h-full dark:bg-gray-800">
+              <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-0 dark:bg-gray-800 flex flex-col">
                 <div className="aspect-video overflow-hidden">
                   <img
                     src={`https://images.unsplash.com/${recipe.image}?w=400&h=300&fit=crop`}
@@ -132,18 +130,17 @@ const Recipes = () => {
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <CardContent className="p-4 flex flex-col h-[calc(100%-150px)]">
-                  <div className="flex-1 space-y-3">
+                <CardContent className="p-4 flex flex-col flex-grow">
+                  <div className="flex-grow space-y-3">
                     <div className="flex items-center justify-between">
-                      <Badge variant="secondary">{recipe.category}</Badge>
+                      <Badge variant="secondary" className="text-xs">{recipe.category}</Badge>
                       <span className="text-xs text-gray-500 dark:text-gray-400">{recipe.difficulty}</span>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
                       {recipe.title}
                     </h3>
-                    {/* Ensure your Recipe interface and data use 'description' if that's what recipes.json provides */}
                     <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{recipe.description}</p>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <Badge variant="outline" className="text-xs dark:border-gray-600">
                         Prep: {recipe.prepTime}
                       </Badge>
@@ -152,16 +149,21 @@ const Recipes = () => {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-3 mt-3 border-t dark:border-gray-700">
+                  <div className="flex items-center justify-between pt-4 mt-4 border-t dark:border-gray-700">
                     <div className="flex flex-wrap gap-1">
                       {recipe.tags.slice(0, 2).map((tag, index) => (
                         <Badge key={index} variant="outline" className="text-xs dark:border-gray-600">
                           #{tag}
                         </Badge>
                       ))}
+                      {recipe.tags.length > 2 && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          +{recipe.tags.length - 2}
+                        </span>
+                      )}
                     </div>
                     <Link to={`/recipes/${recipe.id}`}>
-                      <Button variant="ghost" size="sm" className="text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700">
+                      <Button variant="ghost" size="sm" className="text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700 text-xs">
                         {t("recipe.viewRecipe", language) || "View Recipe"}
                       </Button>
                     </Link>
