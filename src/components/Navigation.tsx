@@ -4,24 +4,23 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Sun, Moon, Globe, LogOut } from "lucide-react"; // Added LogOut icon
+import { Sun, Moon, Globe, LogOut } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
-import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
+import { useAuth } from "@/contexts/AuthContext";
 import { t } from "@/lib/i18n";
-import { useToast } from "@/hooks/use-toast"; // For logout notification
+import { useToast } from "@/hooks/use-toast";
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { theme, toggleTheme, language, setLanguage } = useTheme();
-  const { currentUser, logout } = useAuth(); // Get auth context
+  const { currentUser, logout } = useAuth();
   const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
       await logout();
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      // No need to navigate, AuthProvider will cause re-render
     } catch (error) {
       console.error("Logout error:", error);
       toast({ title: "Logout Error", description: "Failed to log out. Please try again.", variant: "destructive" });
@@ -35,15 +34,6 @@ export const Navigation = () => {
     { name: t("nav.marketplace", language), path: "/marketplace" },
     { name: t("nav.about", language), path: "/about" },
   ];
-
-  const authNavItems = currentUser
-    ? [] // No "Logout" text link in main nav for now, using button instead. Could add "Profile" here.
-    : [
-        { name: t("nav.login", language) || "Login", path: "/login" },
-        { name: t("nav.signup", language) || "Signup", path: "/signup" },
-      ];
-
-  const navItems = [...baseNavItems, ...authNavItems];
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -59,7 +49,7 @@ export const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-8">
-            {navItems.map((item) => (
+            {baseNavItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
@@ -75,7 +65,12 @@ export const Navigation = () => {
             <Button className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 rounded-full">
               #NoFuss
             </Button>
-            {currentUser && (
+          </div>
+
+          {/* Right side - Auth buttons, Theme and Language toggles */}
+          <div className="hidden md:flex md:items-center md:space-x-2">
+            {/* Auth Buttons */}
+            {currentUser ? (
               <Button 
                 variant="outline" 
                 onClick={handleLogout} 
@@ -83,11 +78,22 @@ export const Navigation = () => {
               >
                 <LogOut className="mr-2 h-4 w-4" /> {t("nav.logout", language) || "Logout"}
               </Button>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link to="/login">
+                  <Button variant="ghost" size="sm" className="rounded-full">
+                    {t("nav.login", language) || "Login"}
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 rounded-full">
+                    {t("nav.signup", language) || "Signup"}
+                  </Button>
+                </Link>
+              </div>
             )}
-          </div>
 
-          {/* Theme and Language toggles & Mobile Auth Button */}
-          <div className="hidden md:flex md:items-center md:space-x-2">
+            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
@@ -98,6 +104,7 @@ export const Navigation = () => {
               {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </Button>
             
+            {/* Language Toggle */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -171,7 +178,7 @@ export const Navigation = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col space-y-4 mt-8">
-                  {navItems.map((item) => ( // These are baseNavItems + non-auth items
+                  {baseNavItems.map((item) => (
                     <Link
                       key={item.name}
                       to={item.path}
@@ -185,8 +192,9 @@ export const Navigation = () => {
                       {item.name}
                     </Link>
                   ))}
-                  {/* Mobile Logout Button */}
-                  {currentUser && (
+                  
+                  {/* Mobile Auth Buttons */}
+                  {currentUser ? (
                     <Button
                       variant="ghost"
                       onClick={() => {
@@ -197,6 +205,23 @@ export const Navigation = () => {
                     >
                        <LogOut className="mr-2 h-5 w-5" /> {t("nav.logout", language) || "Logout"}
                     </Button>
+                  ) : (
+                    <>
+                      <Link
+                        to="/login"
+                        onClick={() => setIsOpen(false)}
+                        className="block px-4 py-2 text-lg font-medium text-gray-700 dark:text-gray-300 hover:text-green-600"
+                      >
+                        {t("nav.login", language) || "Login"}
+                      </Link>
+                      <Link
+                        to="/signup"
+                        onClick={() => setIsOpen(false)}
+                        className="block px-4 py-2 text-lg font-medium text-gray-700 dark:text-gray-300 hover:text-green-600"
+                      >
+                        {t("nav.signup", language) || "Signup"}
+                      </Link>
+                    </>
                   )}
                 </div>
               </SheetContent>

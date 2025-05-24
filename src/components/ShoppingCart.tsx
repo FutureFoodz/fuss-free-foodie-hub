@@ -1,5 +1,5 @@
-
 import { useState, createContext, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Sheet, 
@@ -116,14 +116,12 @@ export const ShoppingCart = () => {
   const { items, updateQuantity, removeItem, clearCart, itemCount, total } = useCart();
   const { language } = useTheme();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   
   const handleCheckout = () => {
-    toast({
-      title: "Checkout started",
-      description: `Total: ${total} for ${itemCount} items`,
-    });
     setIsOpen(false);
+    navigate("/checkout");
   };
   
   return (
