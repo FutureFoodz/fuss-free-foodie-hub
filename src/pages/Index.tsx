@@ -3,31 +3,34 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  category: string;
+  price: string;
+  inStock: boolean;
+  details: string;
+  featured: boolean;
+}
 
 const Index = () => {
-  const featuredProducts = [
-    {
-      name: "Artisanal Tempeh",
-      description: "Handcrafted fermented soybean goodness",
-      image: "photo-1618160702438-9b02ab6515c9",
-      category: "Protein",
-      price: "$12.99"
-    },
-    {
-      name: "Dark Chocolate Bliss",
-      description: "70% cacao, ethically sourced",
-      image: "photo-1465146344425-f00d5f5c8f07",
-      category: "Treats",
-      price: "$8.50"
-    },
-    {
-      name: "Probiotic Kimchi",
-      description: "Traditional fermented vegetables",
-      image: "photo-1582562124811-c09040d0a901",
-      category: "Fermented",
-      price: "$9.75"
-    }
-  ];
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    fetch("/data/products.json")
+      .then((response) => response.json())
+      .then((allProducts: Product[]) => {
+        const filteredProducts = allProducts.filter(
+          (product) => product.featured
+        );
+        setFeaturedProducts(filteredProducts);
+      })
+      .catch((error) => console.error("Error fetching featured products:", error));
+  }, []);
 
   const blogPosts = [
     {
@@ -133,8 +136,8 @@ const Index = () => {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map((product, index) => (
-              <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 rounded-xl border-0 shadow-sm">
+            {featuredProducts.map((product) => (
+              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 rounded-xl border-0 shadow-sm">
                 <div className="aspect-video overflow-hidden rounded-t-xl">
                   <img
                     src={`https://images.unsplash.com/${product.image}?w=400&h=300&fit=crop`}
